@@ -204,10 +204,14 @@ function TodoRow({ todo }: { todo: Todo }) {
             <span className="text-[10px] text-gray-300">
               {format(new Date(todo.created_at), 'MMM d, yyyy')}
             </span>
-
-            {/* Tags */}
-            {todo.tags.map(t => <Badge key={t} label={t} />)}
           </div>
+
+          {/* Tags row */}
+          {todo.tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+              {todo.tags.map(t => <Badge key={t} label={t} />)}
+            </div>
+          )}
         </div>
 
         {/* Actions */}

@@ -13,3 +13,10 @@ export const useDayEntries = (date: string) =>
     queryFn: () => timelineApi.getDayEntries(date),
     enabled: !!date,
   })
+
+export const useRangeEntries = (start: string, end: string) =>
+  useQuery({
+    queryKey: ['timeline', 'range', start, end],
+    queryFn: () => timelineApi.getRangeEntries(start, end),
+    enabled: !!start && !!end,
+  })

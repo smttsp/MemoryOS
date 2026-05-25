@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from collections import defaultdict
 from app.database import get_db
 from app.models.entry import Entry
 from app.schemas.entry import EntryOut
@@ -29,3 +30,21 @@ def day_view(date: str = Query(...), db: Session = Depends(get_db)):
         .all()
     )
     return [EntryOut.model_validate(e, from_attributes=True) for e in entries]
+
+@router.get("/range")
+def range_view(start: str = Query(...), end: str = Query(...), db: Session = Depends(get_db)):
+    """Returns entries grouped by date for an inclusive date range."""
+    entries = (
+        db.query(Entry)
+        .filter(
+            Entry.is_deleted == 0,
+            Entry.entry_date >= start,
+            Entry.entry_date <= end,
+        )
+        .order_by(Entry.entry_date, Entry.created_at)
+        .all()
+    )
+    grouped: dict[str, list] = defaultdict(list)
+    for e in entries:
+        grouped[e.entry_date].append(EntryOut.model_validate(e, from_attributes=True))
+    return [{"date": date, "entries": ents} for date, ents in sorted(grouped.items())]
