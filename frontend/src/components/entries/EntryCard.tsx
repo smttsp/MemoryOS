@@ -37,14 +37,28 @@ export default function EntryCard({ entry, onEdit }: { entry: Entry; onEdit?: ()
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {onEdit && (
+          {onEdit && !confirmDel && (
             <button onClick={onEdit} className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
               <Edit2 size={13} />
             </button>
           )}
-          <button onClick={() => setConfirmDel(true)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
-            <Trash2 size={13} />
-          </button>
+          {confirmDel ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-red-500 mr-1">Delete?</span>
+              <button onClick={handleDelete}
+                className="px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600">
+                Yes
+              </button>
+              <button onClick={() => setConfirmDel(false)}
+                className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded hover:bg-gray-200">
+                No
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setConfirmDel(true)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -89,14 +103,6 @@ export default function EntryCard({ entry, onEdit }: { entry: Entry; onEdit?: ()
         </div>
       )}
 
-      {/* Delete confirm */}
-      {confirmDel && (
-        <div className="mt-2 flex items-center gap-2 text-sm">
-          <span className="text-red-600">Delete this entry?</span>
-          <button onClick={handleDelete} className="px-2 py-0.5 bg-red-500 text-white rounded text-xs">Yes</button>
-          <button onClick={() => setConfirmDel(false)} className="px-2 py-0.5 bg-gray-100 rounded text-xs">No</button>
-        </div>
-      )}
     </div>
   )
 }

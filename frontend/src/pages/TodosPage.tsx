@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format, isPast, isToday } from 'date-fns'
-import { Plus, Trash2, Pencil, X, Check, Calendar, Flag } from 'lucide-react'
+import { Plus, Trash2, X, Check, Calendar, Flag } from 'lucide-react'
 import { useTodos, useCreateTodo, useUpdateTodo, useDeleteTodo } from '../hooks/useTodos'
 import TagInput from '../components/entries/TagInput'
 import Badge from '../components/ui/Badge'
@@ -181,13 +181,20 @@ function TodoRow({ todo }: { todo: Todo }) {
   }
 
   return (
-    <div className={`group rounded-xl border transition-colors ${isDone ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
+    <div
+      onClick={openEdit}
+      className={`group rounded-xl border cursor-pointer transition-colors ${
+        isDone ? 'bg-gray-50 border-gray-100 hover:border-gray-200' : 'bg-white border-gray-200 hover:border-brand-300'
+      }`}
+    >
       <div className="flex items-start gap-3 px-4 py-3">
-        {/* Checkbox */}
-        <button onClick={toggle}
-          className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+        {/* Checkbox — square, stops propagation so click doesn't open edit */}
+        <button
+          onClick={e => { e.stopPropagation(); toggle() }}
+          className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
             isDone ? 'bg-brand-500 border-brand-500' : 'border-gray-300 hover:border-brand-400'
-          }`}>
+          }`}
+        >
           {isDone && <span className="text-white text-xs leading-none">✓</span>}
         </button>
 
@@ -234,19 +241,14 @@ function TodoRow({ todo }: { todo: Todo }) {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={openEdit}
-            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-            title="Edit">
-            <Pencil size={13} />
-          </button>
-          <button onClick={() => remove.mutate(todo.id)}
-            className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
-            title="Delete">
-            <Trash2 size={13} />
-          </button>
-        </div>
+        {/* Delete action */}
+        <button
+          onClick={e => { e.stopPropagation(); remove.mutate(todo.id) }}
+          className="p-1 rounded hover:bg-red-50 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+          title="Delete"
+        >
+          <Trash2 size={13} />
+        </button>
       </div>
     </div>
   )

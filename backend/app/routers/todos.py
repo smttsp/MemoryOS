@@ -69,19 +69,20 @@ def update_todo(todo_id: str, data: TodoUpdate, db: Session = Depends(get_db)):
     if not t:
         raise HTTPException(404, "Todo not found")
 
-    if data.title is not None:
+    fields = data.model_fields_set
+    if 'title' in fields and data.title is not None:
         t.title = data.title
-    if data.notes is not None:
-        t.notes = data.notes
-    if data.tags is not None:
+    if 'notes' in fields:
+        t.notes = data.notes          # None clears it
+    if 'tags' in fields and data.tags is not None:
         t.tags = json.dumps(data.tags)
-    if data.priority is not None:
+    if 'priority' in fields and data.priority is not None:
         t.priority = data.priority
-    if data.start_date is not None:
-        t.start_date = data.start_date
-    if data.deadline is not None:
-        t.deadline = data.deadline
-    if data.status is not None:
+    if 'start_date' in fields:
+        t.start_date = data.start_date  # None clears it
+    if 'deadline' in fields:
+        t.deadline = data.deadline      # None clears it
+    if 'status' in fields and data.status is not None:
         t.status = data.status
         t.completed_at = _now() if data.status == "done" else None
 
