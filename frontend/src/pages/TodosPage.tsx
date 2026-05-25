@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { format, isPast, isToday } from 'date-fns'
-import { Plus, Trash2, ChevronDown, ChevronUp, Calendar, Tag, Flag } from 'lucide-react'
+import { Plus, Trash2, Pencil, X, Check, Calendar, Flag } from 'lucide-react'
 import { useTodos, useCreateTodo, useUpdateTodo, useDeleteTodo } from '../hooks/useTodos'
 import TagInput from '../components/entries/TagInput'
 import Badge from '../components/ui/Badge'
@@ -15,103 +15,96 @@ const PRIORITY = {
   low:    { label: 'Low',    color: 'text-gray-400',   bg: 'bg-gray-50 border-gray-200'  },
 }
 
-// ── Add Todo form ──────────────────────────────────────────────────────────────
-function AddTodoForm({ onClose }: { onClose: () => void }) {
-  const create = useCreateTodo()
-  const [title, setTitle]           = useState('')
-  const [notes, setNotes]           = useState('')
-  const [tags, setTags]             = useState<string[]>([])
-  const [priority, setPriority]     = useState<'low' | 'medium' | 'high'>('medium')
-  const [startDate, setStartDate]   = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [deadline, setDeadline]     = useState('')
+// ── Shared todo form fields (used in both Add and Edit) ────────────────────────
+interface TodoFormState {
+  title: string
+  notes: string
+  tags: string[]
+  priority: 'low' | 'medium' | 'high'
+  startDate: string
+  deadline: string
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
-    await create.mutateAsync({
-      title: title.trim(),
-      notes: notes.trim() || undefined,
-      tags,
-      priority,
-      start_date: startDate || undefined,
-      deadline: deadline || undefined,
-    })
-    onClose()
-  }
-
+function TodoFormFields({
+  state, onChange,
+}: {
+  state: TodoFormState
+  onChange: (patch: Partial<TodoFormState>) => void
+}) {
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-brand-200 rounded-xl p-4 shadow-sm space-y-3 mb-4">
-      {/* Title */}
+    <div className="space-y-3">
       <input
         autoFocus
-        value={title}
-        onChange={e => setTitle(e.target.value)}
+        value={state.title}
+        onChange={e => onChange({ title: e.target.value })}
         placeholder="What needs to be done?"
         className="w-full text-sm font-medium border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-400 text-gray-900"
       />
-
-      {/* Notes */}
       <textarea
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
+        value={state.notes}
+        onChange={e => onChange({ notes: e.target.value })}
         placeholder="Notes (optional)"
-        rows={2}
+        rows={3}
         className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-400"
       />
-
-      {/* Row: priority + dates */}
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Priority */}
         <select
-          value={priority}
-          onChange={e => setPriority(e.target.value as any)}
+          value={state.priority}
+          onChange={e => onChange({ priority: e.target.value as any })}
           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
         >
           <option value="low">🟢 Low</option>
           <option value="medium">🟡 Medium</option>
           <option value="high">🔴 High</option>
         </select>
-
-        {/* Start date */}
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-400">Start</span>
-          <input
-            type="date"
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-            className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          <input type="date" value={state.startDate} onChange={e => onChange({ startDate: e.target.value })}
+            className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
-
-        {/* Deadline */}
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-400">Due</span>
-          <input
-            type="date"
-            value={deadline}
-            onChange={e => setDeadline(e.target.value)}
-            className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          <input type="date" value={state.deadline} onChange={e => onChange({ deadline: e.target.value })}
+            className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
       </div>
+      <TagInput tags={state.tags} onChange={tags => onChange({ tags })} />
+    </div>
+  )
+}
 
-      {/* Tags */}
-      <TagInput tags={tags} onChange={setTags} />
+// ── Add Todo form ──────────────────────────────────────────────────────────────
+function AddTodoForm({ onClose }: { onClose: () => void }) {
+  const create = useCreateTodo()
+  const [form, setForm] = useState<TodoFormState>({
+    title: '', notes: '', tags: [], priority: 'medium',
+    startDate: format(new Date(), 'yyyy-MM-dd'), deadline: '',
+  })
 
-      {/* Buttons */}
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    await create.mutateAsync({
+      title: form.title.trim(),
+      notes: form.notes.trim() || undefined,
+      tags: form.tags,
+      priority: form.priority,
+      start_date: form.startDate || undefined,
+      deadline: form.deadline || undefined,
+    })
+    onClose()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white border border-brand-200 rounded-xl p-4 shadow-sm space-y-3 mb-4">
+      <TodoFormFields state={form} onChange={patch => setForm(s => ({ ...s, ...patch }))} />
       <div className="flex justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-        >
+        <button type="button" onClick={onClose}
+          className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
           Cancel
         </button>
-        <button
-          type="submit"
-          disabled={create.isPending || !title.trim()}
-          className="px-4 py-1.5 text-sm font-medium bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50"
-        >
+        <button type="submit" disabled={create.isPending || !form.title.trim()}
+          className="px-4 py-1.5 text-sm font-medium bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50">
           {create.isPending ? 'Adding…' : 'Add Todo'}
         </button>
       </div>
@@ -121,11 +114,17 @@ function AddTodoForm({ onClose }: { onClose: () => void }) {
 
 // ── Single todo row ────────────────────────────────────────────────────────────
 function TodoRow({ todo }: { todo: Todo }) {
-  const update  = useUpdateTodo()
-  const remove  = useDeleteTodo()
-  const [expanded, setExpanded] = useState(false)
-  const [editing, setEditing]   = useState(false)
-  const [editTitle, setEditTitle] = useState(todo.title)
+  const update = useUpdateTodo()
+  const remove = useDeleteTodo()
+  const [isEditing, setIsEditing] = useState(false)
+  const [form, setForm] = useState<TodoFormState>({
+    title:     todo.title,
+    notes:     todo.notes ?? '',
+    tags:      todo.tags,
+    priority:  todo.priority,
+    startDate: todo.start_date ?? '',
+    deadline:  todo.deadline ?? '',
+  })
 
   const isDone     = todo.status === 'done'
   const p          = PRIORITY[todo.priority]
@@ -135,61 +134,84 @@ function TodoRow({ todo }: { todo: Todo }) {
   const toggle = () =>
     update.mutate({ id: todo.id, data: { status: isDone ? 'pending' : 'done' } })
 
-  const saveTitle = () => {
-    if (editTitle.trim() && editTitle !== todo.title)
-      update.mutate({ id: todo.id, data: { title: editTitle.trim() } })
-    setEditing(false)
+  const openEdit = () => {
+    setForm({
+      title:     todo.title,
+      notes:     todo.notes ?? '',
+      tags:      todo.tags,
+      priority:  todo.priority,
+      startDate: todo.start_date ?? '',
+      deadline:  todo.deadline ?? '',
+    })
+    setIsEditing(true)
+  }
+
+  const saveEdit = async () => {
+    if (!form.title.trim()) return
+    await update.mutateAsync({
+      id: todo.id,
+      data: {
+        title:      form.title.trim(),
+        notes:      form.notes.trim() || null,
+        tags:       form.tags,
+        priority:   form.priority,
+        start_date: form.startDate || null,
+        deadline:   form.deadline || null,
+      },
+    })
+    setIsEditing(false)
+  }
+
+  if (isEditing) {
+    return (
+      <div className="bg-white border border-brand-200 rounded-xl p-4 shadow-sm space-y-3">
+        <TodoFormFields state={form} onChange={patch => setForm(s => ({ ...s, ...patch }))} />
+        <div className="flex justify-end gap-2 pt-1">
+          <button onClick={() => setIsEditing(false)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100">
+            <X size={13} /> Cancel
+          </button>
+          <button onClick={saveEdit} disabled={update.isPending || !form.title.trim()}
+            className="flex items-center gap-1 px-4 py-1.5 text-sm font-medium bg-brand-500 text-white rounded-lg hover:bg-brand-600 disabled:opacity-50">
+            <Check size={13} /> {update.isPending ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className={`group rounded-xl border transition-colors ${isDone ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200'}`}>
-      {/* Main row */}
       <div className="flex items-start gap-3 px-4 py-3">
         {/* Checkbox */}
-        <button
-          onClick={toggle}
+        <button onClick={toggle}
           className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
             isDone ? 'bg-brand-500 border-brand-500' : 'border-gray-300 hover:border-brand-400'
-          }`}
-        >
+          }`}>
           {isDone && <span className="text-white text-xs leading-none">✓</span>}
         </button>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {editing ? (
-            <input
-              autoFocus
-              value={editTitle}
-              onChange={e => setEditTitle(e.target.value)}
-              onBlur={saveTitle}
-              onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditing(false) }}
-              className="w-full text-sm font-medium outline-none border-b border-brand-400 bg-transparent pb-0.5"
-            />
-          ) : (
-            <span
-              onDoubleClick={() => setEditing(true)}
-              className={`text-sm font-medium cursor-text select-none ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}
-            >
-              {todo.title}
-            </span>
+          <span className={`text-sm font-medium ${isDone ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+            {todo.title}
+          </span>
+
+          {/* Notes preview */}
+          {todo.notes && (
+            <p className="text-xs text-gray-400 mt-0.5 truncate">{todo.notes}</p>
           )}
 
           {/* Meta chips */}
           <div className="flex flex-wrap items-center gap-2 mt-1.5">
-            {/* Priority */}
             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${p.bg} ${p.color}`}>
               {p.label}
             </span>
-
-            {/* Start date */}
             {todo.start_date && (
               <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
                 <Calendar size={10} /> {format(new Date(todo.start_date + 'T00:00:00'), 'MMM d')}
               </span>
             )}
-
-            {/* Deadline */}
             {todo.deadline && (
               <span className={`flex items-center gap-0.5 text-[10px] font-medium ${
                 isOverdue ? 'text-red-500' : isDueToday ? 'text-amber-500' : 'text-gray-400'
@@ -199,14 +221,12 @@ function TodoRow({ todo }: { todo: Todo }) {
                 {format(new Date(todo.deadline + 'T00:00:00'), 'MMM d')}
               </span>
             )}
-
-            {/* Created */}
             <span className="text-[10px] text-gray-300">
               {format(new Date(todo.created_at), 'MMM d, yyyy')}
             </span>
           </div>
 
-          {/* Tags row */}
+          {/* Tags */}
           {todo.tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               {todo.tags.map(t => <Badge key={t} label={t} />)}
@@ -216,55 +236,38 @@ function TodoRow({ todo }: { todo: Todo }) {
 
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setExpanded(v => !v)}
-            className="p-1 rounded hover:bg-gray-100 text-gray-400"
-            title={expanded ? 'Collapse' : 'Expand'}
-          >
-            {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          <button onClick={openEdit}
+            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+            title="Edit">
+            <Pencil size={13} />
           </button>
-          <button
-            onClick={() => remove.mutate(todo.id)}
+          <button onClick={() => remove.mutate(todo.id)}
             className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
-          >
+            title="Delete">
             <Trash2 size={13} />
           </button>
         </div>
       </div>
-
-      {/* Expanded detail */}
-      {expanded && (
-        <div className="px-12 pb-4 space-y-2 border-t border-gray-100 pt-3">
-          {todo.notes && <p className="text-sm text-gray-600 leading-relaxed">{todo.notes}</p>}
-          {todo.completed_at && (
-            <p className="text-xs text-gray-400">
-              Completed {format(new Date(todo.completed_at), 'MMM d, yyyy · h:mm a')}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   )
 }
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function TodosPage() {
-  const [showAll, setShowAll]       = useState(false)
-  const [showForm, setShowForm]     = useState(false)
-  const [activeTag, setActiveTag]   = useState<string | null>(null)
+  const [showAll, setShowAll]               = useState(false)
+  const [showForm, setShowForm]             = useState(false)
+  const [activeTag, setActiveTag]           = useState<string | null>(null)
   const [activePriority, setActivePriority] = useState<string | null>(null)
 
   const { data: todos = [], isLoading } = useTodos({
-    status: showAll ? undefined : 'pending',
-    tag: activeTag ?? undefined,
+    status:   showAll ? undefined : 'pending',
+    tag:      activeTag ?? undefined,
     priority: activePriority ?? undefined,
   })
 
-  // Collect all unique tags across todos for the filter bar
-  const allTags = useMemo(() => {
-    const { data: allTodosRaw } = { data: todos }
-    return [...new Set(todos.flatMap(t => t.tags))].sort()
-  }, [todos])
+  const allTags = useMemo(() =>
+    [...new Set(todos.flatMap(t => t.tags))].sort()
+  , [todos])
 
   const pending = todos.filter(t => t.status === 'pending').length
   const done    = todos.filter(t => t.status === 'done').length
@@ -279,67 +282,45 @@ export default function TodosPage() {
             {pending} remaining{showAll && done > 0 ? ` · ${done} done` : ''}
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(v => !v)}
-          className="flex items-center gap-1.5 bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors"
-        >
+        <button onClick={() => setShowForm(v => !v)}
+          className="flex items-center gap-1.5 bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-600 transition-colors">
           <Plus size={15} /> New Todo
         </button>
       </div>
 
-      {/* Add form */}
       {showForm && <AddTodoForm onClose={() => setShowForm(false)} />}
 
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Show all toggle */}
-        <button
-          onClick={() => setShowAll(v => !v)}
+        <button onClick={() => setShowAll(v => !v)}
           className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
-            showAll
-              ? 'bg-gray-800 text-white border-gray-800'
-              : 'border-gray-200 text-gray-500 hover:border-gray-400'
-          }`}
-        >
+            showAll ? 'bg-gray-800 text-white border-gray-800' : 'border-gray-200 text-gray-500 hover:border-gray-400'
+          }`}>
           {showAll ? 'Showing all' : 'Remaining only'}
         </button>
-
-        {/* Priority filters */}
         {(['high', 'medium', 'low'] as const).map(p => (
-          <button
-            key={p}
-            onClick={() => setActivePriority(activePriority === p ? null : p)}
+          <button key={p} onClick={() => setActivePriority(activePriority === p ? null : p)}
             className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-colors ${
               activePriority === p
                 ? `${PRIORITY[p].bg} ${PRIORITY[p].color} border-current`
                 : 'border-gray-200 text-gray-400 hover:border-gray-300'
-            }`}
-          >
+            }`}>
             {PRIORITY[p].label}
           </button>
         ))}
-
-        {/* Tag filters */}
         {allTags.map(tag => (
-          <button
-            key={tag}
-            onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+          <button key={tag} onClick={() => setActiveTag(activeTag === tag ? null : tag)}
             className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
               activeTag === tag
                 ? 'bg-brand-500 text-white border-brand-500'
                 : 'border-gray-200 text-gray-400 hover:border-brand-300'
-            }`}
-          >
+            }`}>
             #{tag}
           </button>
         ))}
-
-        {/* Clear filters */}
         {(activeTag || activePriority) && (
-          <button
-            onClick={() => { setActiveTag(null); setActivePriority(null) }}
-            className="text-xs text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={() => { setActiveTag(null); setActivePriority(null) }}
+            className="text-xs text-gray-400 hover:text-gray-600">
             × clear filters
           </button>
         )}
@@ -353,16 +334,12 @@ export default function TodosPage() {
           icon="✅"
           title={showAll ? 'No todos yet' : 'All done!'}
           description={showAll ? 'Add your first todo above' : 'Nothing remaining — great work'}
-          action={
-            !showForm ? (
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-brand-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-600"
-              >
-                Add todo
-              </button>
-            ) : undefined
-          }
+          action={!showForm ? (
+            <button onClick={() => setShowForm(true)}
+              className="bg-brand-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-600">
+              Add todo
+            </button>
+          ) : undefined}
         />
       ) : (
         <div className="space-y-2">
