@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { CalendarDays, MessageSquare, Home, Settings, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, MessageSquare, Home, Settings, Plus, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
 import { useCollections } from '../../hooks/useCollections'
 import { useState } from 'react'
 import CollectionModal from '../collections/CollectionModal'
@@ -37,6 +37,9 @@ export default function Sidebar({ open, onToggle }: Props) {
           </NavLink>
           <NavLink to="/chat" className={navCls}>
             <MessageSquare size={16} /> {open && 'AI Chat'}
+          </NavLink>
+          <NavLink to="/todos" className={navCls}>
+            <CheckSquare size={16} /> {open && 'Todos'}
           </NavLink>
 
           {/* Collections */}

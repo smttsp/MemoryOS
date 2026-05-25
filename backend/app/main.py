@@ -17,7 +17,7 @@ import app.models  # noqa: F401
 
 from app.routers import (
     collections, entries, attachments,
-    timeline, search, chat, settings as settings_router
+    timeline, search, chat, settings as settings_router, todos
 )
 
 @asynccontextmanager
@@ -50,6 +50,7 @@ app.include_router(timeline.router,        prefix="/api/timeline",    tags=["tim
 app.include_router(search.router,          prefix="/api/search",      tags=["search"])
 app.include_router(chat.router,            prefix="/api/chat",        tags=["chat"])
 app.include_router(settings_router.router, prefix="/api/settings",    tags=["settings"])
+app.include_router(todos.router,           prefix="/api/todos",        tags=["todos"])
 
 @app.get("/api/health")
 def health():

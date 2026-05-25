@@ -40,7 +40,7 @@ def list_entries(
         q = q.filter(Entry.tags.contains(f'"{tag}"'))
     total = q.count()
     entries = q.order_by(Entry.entry_date.desc(), Entry.created_at.desc()).offset(offset).limit(limit).all()
-    return [EntryOut.model_validate(e, update={"tags": json.loads(e.tags)}) for e in entries]
+    return [EntryOut.model_validate(e, from_attributes=True) for e in entries]
 
 @router.post("", response_model=EntryOut, status_code=201)
 def create_entry(data: EntryCreate, bg: BackgroundTasks, db: Session = Depends(get_db)):
@@ -62,14 +62,14 @@ def create_entry(data: EntryCreate, bg: BackgroundTasks, db: Session = Depends(g
     db.refresh(e)
     text = f"{data.title or ''} {body_plain}".strip()
     bg.add_task(_bg_embed, e.id, e.collection_id, e.entry_date, text, data.tags)
-    return EntryOut.model_validate(e, update={"tags": data.tags, "attachments": []})
+    return EntryOut.model_validate(e, from_attributes=True)
 
 @router.get("/{entry_id}", response_model=EntryOut)
 def get_entry(entry_id: str, db: Session = Depends(get_db)):
     e = db.get(Entry, entry_id)
     if not e or e.is_deleted:
         raise HTTPException(404, "Entry not found")
-    return EntryOut.model_validate(e, update={"tags": json.loads(e.tags)})
+    return EntryOut.model_validate(e, from_attributes=True)
 
 @router.patch("/{entry_id}", response_model=EntryOut)
 def update_entry(entry_id: str, data: EntryUpdate, bg: BackgroundTasks, db: Session = Depends(get_db)):
@@ -93,7 +93,7 @@ def update_entry(entry_id: str, data: EntryUpdate, bg: BackgroundTasks, db: Sess
     tags = json.loads(e.tags)
     text = f"{e.title or ''} {e.body_plain}".strip()
     bg.add_task(_bg_embed, e.id, e.collection_id, e.entry_date, text, tags)
-    return EntryOut.model_validate(e, update={"tags": tags})
+    return EntryOut.model_validate(e, from_attributes=True)
 
 @router.delete("/{entry_id}", status_code=204)
 def delete_entry(entry_id: str, db: Session = Depends(get_db)):

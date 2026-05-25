@@ -62,3 +62,17 @@ export interface TimelineDaySummary {
   date: string
   entry_count: number
 }
+
+export interface Todo {
+  id: string
+  title: string
+  notes?: string
+  tags: string[]
+  status: 'pending' | 'done'
+  priority: 'low' | 'medium' | 'high'
+  start_date?: string   // YYYY-MM-DD
+  deadline?: string     // YYYY-MM-DD
+  completed_at?: string
+  created_at: string
+  updated_at: string
+}

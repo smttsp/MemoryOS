@@ -3,9 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
 from app.models.entry import Entry
-from app.models.attachment import Attachment
 from app.schemas.entry import EntryOut
-import json
 
 router = APIRouter()
 
@@ -30,4 +28,4 @@ def day_view(date: str = Query(...), db: Session = Depends(get_db)):
         .order_by(Entry.created_at)
         .all()
     )
-    return [EntryOut.model_validate(e, update={"tags": json.loads(e.tags)}) for e in entries]
+    return [EntryOut.model_validate(e, from_attributes=True) for e in entries]

@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+import json
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from app.schemas.attachment import AttachmentOut
 
@@ -27,6 +28,13 @@ class EntryOut(BaseModel):
     created_at: str
     updated_at: str
     attachments: List[AttachmentOut] = []
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def parse_tags(cls, v: object) -> list:
+        if isinstance(v, str):
+            return json.loads(v)
+        return v  # type: ignore[return-value]
 
     class Config:
         from_attributes = True

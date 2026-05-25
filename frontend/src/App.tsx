@@ -8,6 +8,7 @@ import EntryPage from './pages/EntryPage'
 import TimelinePage from './pages/TimelinePage'
 import ChatPage from './pages/ChatPage'
 import SettingsPage from './pages/SettingsPage'
+import TodosPage from './pages/TodosPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000 } },
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/e/:id"      element={<EntryPage />} />
             <Route path="/timeline"   element={<TimelinePage />} />
             <Route path="/chat"       element={<ChatPage />} />
+            <Route path="/todos"       element={<TodosPage />} />
             <Route path="/settings"   element={<SettingsPage />} />
           </Routes>
         </AppShell>
