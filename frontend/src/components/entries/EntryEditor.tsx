@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -26,7 +26,17 @@ export default function EntryEditor({ entry, defaultCollectionId, defaultDate, o
   const createEntry = useCreateEntry()
   const updateEntry = useUpdateEntry()
 
-  const [collectionId, setCollectionId] = useState(entry?.collection_id ?? defaultCollectionId ?? collections[0]?.id ?? '')
+  // Priority: existing entry → explicit default → first available collection
+  const [collectionId, setCollectionId] = useState(
+    entry?.collection_id ?? defaultCollectionId ?? ''
+  )
+
+  // If no default was given, fall back to first collection once they load
+  useEffect(() => {
+    if (!collectionId && !defaultCollectionId && collections.length > 0) {
+      setCollectionId(collections[0].id)
+    }
+  }, [collections, collectionId, defaultCollectionId])
   const [title, setTitle]               = useState(entry?.title ?? '')
   const [tags, setTags]                 = useState<string[]>(entry?.tags ?? [])
   const [entryDate, setEntryDate]       = useState(entry?.entry_date ?? defaultDate ?? format(new Date(), 'yyyy-MM-dd'))

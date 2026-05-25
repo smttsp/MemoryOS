@@ -15,11 +15,17 @@ export const useEntry = (id: string) =>
     enabled: !!id,
   })
 
+const invalidateAll = (qc: ReturnType<typeof useQueryClient>) => {
+  qc.invalidateQueries({ queryKey: ['entries'] })
+  qc.invalidateQueries({ queryKey: ['collections'] })
+  qc.invalidateQueries({ queryKey: ['timeline'] })
+}
+
 export const useCreateEntry = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: entriesApi.createEntry,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['entries'] }); qc.invalidateQueries({ queryKey: ['collections'] }) },
+    onSuccess: () => invalidateAll(qc),
     onError: () => toast.error('Failed to create entry'),
   })
 }
@@ -29,7 +35,7 @@ export const useUpdateEntry = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => entriesApi.updateEntry(id, data),
     onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['entries'] })
+      invalidateAll(qc)
       qc.invalidateQueries({ queryKey: ['entry', vars.id] })
     },
     onError: () => toast.error('Failed to save entry'),
@@ -40,7 +46,7 @@ export const useDeleteEntry = () => {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: entriesApi.deleteEntry,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['entries'] }); qc.invalidateQueries({ queryKey: ['collections'] }); toast.success('Entry deleted') },
+    onSuccess: () => { invalidateAll(qc); toast.success('Entry deleted') },
     onError: () => toast.error('Failed to delete entry'),
   })
 }
