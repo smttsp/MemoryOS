@@ -116,6 +116,17 @@ ENV/
 env.bak/
 venv.bak/
 
+# Node
+node_modules/
+frontend/node_modules/
+
+# MemoryOS data (DB, vectors, uploads)
+data/
+uploads/
+*.db
+*.db-shm
+*.db-wal
+
 # Spyder project settings
 .spyderproject
 .spyproject
