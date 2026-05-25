@@ -166,3 +166,6 @@ wandb/**
 **.json
 **.tar
 **.tar.gz
+
+# macOS launcher app
+MemoryOS.app/
