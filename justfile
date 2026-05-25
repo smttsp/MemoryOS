@@ -1,31 +1,41 @@
 set dotenv-load := true
 
-# create dev environment
-[no-cd]
-install:
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# list justfile recipes
+# list all recipes
 default:
     just --list
 
-# clean dev environment
-[no-cd]
-clean:
-    rm -rf .venv
-
-# install dependencies
-[no-cd]
+# install all dependencies (backend + frontend)
 setup:
-    uv venv
-    source .venv/bin/activate
-    uv sync
+    cd backend && uv sync
+    cd frontend && npm install
 
-# run linting
-lint:
-    ruff format .
-    ruff check --fix .
+# start the full app (backend + frontend)
+dev:
+    ./start.sh
 
-# run tests
-test:
-    pytest
+# start backend only (port 8000)
+backend:
+    cd backend && uv run uvicorn app.main:app --reload --port 8000
+
+# start frontend only (port 5173)
+frontend:
+    cd frontend && npm run dev
+
+# install uv if not present
+install-uv:
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# clean python venv
+clean-backend:
+    rm -rf backend/.venv
+
+# clean frontend node_modules
+clean-frontend:
+    rm -rf frontend/node_modules
+
+# clean everything
+clean: clean-backend clean-frontend
+
+# open API docs in browser
+docs:
+    open http://localhost:8000/docs
